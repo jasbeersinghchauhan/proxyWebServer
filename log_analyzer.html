@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proxy Log Analyzer</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #111827;
+        color: #f3f4f6;
+        margin: 0;
+        padding: 1.5rem;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #22d3ee;
+      }
+
+      .subtitle {
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+
+      /* Drop zone */
+      #dropZone {
+        background-color: #1f2937;
+        border: 2px dashed #4b5563;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.2s, border-color 0.2s;
+        margin-bottom: 2rem;
+      }
+
+      #dropZone:hover {
+        background-color: #374151;
+      }
+
+      #dropZone.drag-over {
+        border-color: #3b82f6;
+        background-color: #374151;
+      }
+
+      #dropZone svg {
+        height: 48px;
+        width: 48px;
+        color: #9ca3af;
+      }
+
+      #dropZone p {
+        margin: 0.5rem 0;
+      }
+
+      #dropZone .highlight {
+        color: #22d3ee;
+      }
+
+      #fileName {
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+
+      /* Grid layout for stats */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .card {
+        background-color: #1f2937;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      }
+
+      .card h3 {
+        color: #9ca3af;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .card p {
+        font-size: 1.875rem;
+        font-weight: bold;
+      }
+
+      #hitRate {
+        color: #22c55e;
+      }
+
+      /* Chart + log feed layout */
+      .dashboard {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      @media (min-width: 1024px) {
+        .dashboard {
+          grid-template-columns: 1fr 2fr;
+        }
+      }
+
+      .panel {
+        background-color: #1f2937;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      }
+
+      .panel h2 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        color: #fff;
+      }
+
+      #cacheChart {
+        width: 100%;
+        height: 300px;
+      }
+
+      #chartError {
+        text-align: center;
+        color: #9ca3af;
+        display: none;
+      }
+
+      /* Log Feed */
+      #logFeed {
+        height: 320px;
+        overflow-y: auto;
+        background-color: #111827;
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: monospace;
+        font-size: 0.875rem;
+      }
+
+      #logFeed p {
+        color: #6b7280;
+        margin: 0;
+      }
+
+      /* Scrollbar styling */
+      #logFeed::-webkit-scrollbar {
+        width: 6px;
+      }
+      #logFeed::-webkit-scrollbar-track {
+        background: #1f2937;
+      }
+      #logFeed::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        border-radius: 3px;
+      }
+      #logFeed::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
+
+      .log-entry {
+        display: flex;
+        align-items: start;
+        margin-bottom: 0.5rem;
+      }
+
+      .log-entry span {
+        margin-right: 0.5rem;
+      }
+
+      .text-gray {
+        color: #9ca3af;
+      }
+
+      .text-green {
+        color: #4ade80;
+      }
+
+      .text-yellow {
+        color: #facc15;
+      }
+
+      .text-red {
+        color: #f87171;
+      }
+
+      .text-blue {
+        color: #60a5fa;
+      }
+
+      .text-purple {
+        color: #a78bfa;
+      }
+
+      .text-cyan {
+        color: #22d3ee;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <h1>Proxy Log Analyzer</h1>
+        <span class="subtitle">Powered by proxy.log</span>
+      </div>
+
+      <!-- File Drop Zone -->
+      <div id="dropZone">
+        <input
+          type="file"
+          id="fileInput"
+          style="display: none"
+          accept=".log, .txt"
+        />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.33-2.348 5.25 5.25 0 014.286 5.85c-.068.355.143.702.502.834a4.5 4.5 0 01-.14 8.775H6.75z"
+          />
+        </svg>
+        <p>
+          Drop <code>proxy.log</code> here or
+          <span class="highlight">click to upload</span>
+        </p>
+        <p id="fileName">No file selected</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="card">
+          <h3>Total Requests</h3>
+          <p id="totalRequests">0</p>
+        </div>
+        <div class="card">
+          <h3>Cache Hit Rate</h3>
+          <p id="hitRate">0%</p>
+        </div>
+        <div class="card">
+          <h3>Cache Hits</h3>
+          <p id="cacheHits">0</p>
+        </div>
+        <div class="card">
+          <h3>Cache Misses</h3>
+          <p id="cacheMisses">0</p>
+        </div>
+        <div class="card">
+          <h3>HTTPS Tunnels</h3>
+          <p id="httpsNETSTunnels">0</p>
+        </div>
+      </div>
+
+      <!-- Dashboard -->
+      <div class="dashboard">
+        <div class="panel">
+          <h2>Cache Performance</h2>
+          <canvas id="cacheChart"></canvas>
+          <p id="chartError">No cache data to display.</p>
+        </div>
+
+        <div class="panel">
+          <h2>Live Log Feed (Parsed)</h2>
+          <div id="logFeed">
+            <p>
+              Upload a <code>proxy.log</code> file to see parsed output here...
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript (same logic, no Tailwind dependencies) -->
+    <script>
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const fileNameEl = document.getElementById("fileName");
+      const totalRequestsEl = document.getElementById("totalRequests");
+      const hitRateEl = document.getElementById("hitRate");
+      const cacheHitsEl = document.getElementById("cacheHits");
+      const cacheMissesEl = document.getElementById("cacheMisses");
+      const httpsTunnelsEl = document.getElementById("httpsNETSTunnels");
+      const logFeedEl = document.getElementById("logFeed");
+      const chartErrorEl = document.getElementById("chartError");
+      const chartCtx = document.getElementById("cacheChart").getContext("2d");
+      let cacheChart = null;
+
+      dropZone.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", (e) =>
+        handleFile(e.target.files[0])
+      );
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+      dropZone.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+      });
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        handleFile(e.dataTransfer.files[0]);
+      });
+
+      function handleFile(file) {
+        if (!file) return;
+        fileNameEl.textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = (e) => parseLog(e.target.result);
+        reader.onerror = () => (fileNameEl.textContent = "Error reading file");
+        reader.readAsText(file);
+      }
+
+      function parseLog(logText) {
+        const stats = {
+          totalRequests: 0,
+          cacheHits: 0,
+          cacheMisses: 0,
+          httpsTunnels: 0,
+        };
+        const logEntries = [];
+        const lines = logText.split("\n").filter((l) => l.trim().length > 0);
+
+        lines.forEach((line) => {
+          try {
+            const parts = line.split("] ");
+            if (parts.length < 2) return;
+            const timestamp = parts[0].substring(1);
+            const message = parts.slice(1).join("] ");
+            const msgParts = message.split("|");
+            if (msgParts.length < 3) return;
+
+            const logLevel = msgParts[0].trim();
+            const clientId = msgParts[1].trim();
+            const logMessage = msgParts[2].trim();
+            const url = msgParts[3] ? msgParts[3].trim() : "";
+            logEntries.push({ timestamp, logLevel, clientId, logMessage, url });
+
+            switch (logMessage) {
+              case "CACHE_HIT":
+                stats.cacheHits++;
+                break;
+              case "CACHE_MISS":
+                stats.cacheMisses++;
+                break;
+              case "CONNECT":
+                stats.httpsTunnels++;
+                break;
+            }
+            stats.totalRequests++;
+          } catch {}
+        });
+
+        updateDashboard(stats, logEntries);
+      }
+
+      function updateDashboard(stats, logEntries) {
+        totalRequestsEl.textContent = stats.totalRequests;
+        cacheHitsEl.textContent = stats.cacheHits;
+        cacheMissesEl.textContent = stats.cacheMisses;
+        httpsTunnelsEl.textContent = stats.httpsTunnels;
+        const httpRequests = stats.cacheHits + stats.cacheMisses;
+        const hitRate =
+          httpRequests > 0 ? (stats.cacheHits / httpRequests) * 100 : 0;
+        hitRateEl.textContent = hitRate.toFixed(1) + "%";
+        updateChart(stats.cacheHits, stats.cacheMisses);
+        updateLogFeed(logEntries);
+      }
+
+      function updateChart(hits, misses) {
+        if (cacheChart) cacheChart.destroy();
+        if (hits === 0 && misses === 0) {
+          chartErrorEl.style.display = "block";
+          return;
+        }
+        chartErrorEl.style.display = "none";
+        cacheChart = new Chart(chartCtx, {
+          type: "pie",
+          data: {
+            labels: ["Cache Hits", "Cache Misses"],
+            datasets: [
+              {
+                data: [hits, misses],
+                backgroundColor: ["#22c55e", "#ef4444"],
+                borderColor: "#1f2937",
+                borderWidth: 3,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: { color: "#d1d5db" },
+              },
+            },
+          },
+        });
+      }
+
+      function updateLogFeed(logEntries) {
+        logFeedEl.innerHTML = "";
+        if (logEntries.length === 0) {
+          logFeedEl.innerHTML = "<p>No parsable log entries found.</p>";
+          return;
+        }
+
+        logEntries.forEach((entry) => {
+          const div = document.createElement("div");
+          div.className = "log-entry";
+          let color = "text-gray";
+          let icon = "ℹ️";
+
+          switch (entry.logMessage) {
+            case "CACHE_HIT":
+              color = "text-green";
+              icon = "✅";
+              break;
+            case "CACHE_MISS":
+              color = "text-yellow";
+              icon = "🔍";
+              break;
+            case "CONNECT":
+              color = "text-purple";
+              icon = "🔒";
+              break;
+          }
+
+          if (entry.logLevel === "ERROR" || entry.logLevel === "FATAL") {
+            color = "text-red";
+            icon = "❌";
+          } else if (entry.logLevel === "WARN") {
+            color = "text-yellow";
+            icon = "⚠️";
+          }
+
+          div.innerHTML = `
+            <span class="text-gray">${entry.timestamp.split(" ")[1]}</span>
+            <span class="${color}" style="min-width:100px;display:inline-block">${icon} ${
+            entry.logMessage
+          }</span>
+            <span>${entry.clientId} ${
+            entry.url ? `<span class="text-cyan">${entry.url}</span>` : ""
+          }</span>
+          `;
+          logFeedEl.appendChild(div);
+        });
+
+        logFeedEl.scrollTop = logFeedEl.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
