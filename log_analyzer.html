@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -55,7 +55,9 @@
         padding: 2rem;
         text-align: center;
         cursor: pointer;
-        transition: background-color 0.2s, border-color 0.2s;
+        transition:
+          background-color 0.2s,
+          border-color 0.2s;
         margin-bottom: 2rem;
       }
 
@@ -321,7 +323,7 @@
 
       dropZone.addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", (e) =>
-        handleFile(e.target.files[0])
+        handleFile(e.target.files[0]),
       );
       dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -358,32 +360,38 @@
 
         lines.forEach((line) => {
           try {
-            const parts = line.split("] ");
-            if (parts.length < 2) return;
-            const timestamp = parts[0].substring(1);
-            const message = parts.slice(1).join("] ");
-            const msgParts = message.split("|");
+            // FIX: Split directly by pipe "|" since there is no timestamp
+            const msgParts = line.split("|");
+
+            // We need at least 3 parts: Level, Client, Message
             if (msgParts.length < 3) return;
 
             const logLevel = msgParts[0].trim();
             const clientId = msgParts[1].trim();
             const logMessage = msgParts[2].trim();
+            // URL is optional, located in the 4th part if it exists
             const url = msgParts[3] ? msgParts[3].trim() : "";
+
+            // FIX: Add a dummy timestamp or placeholder since the log doesn't have one
+            const timestamp = "--:--:--";
+
             logEntries.push({ timestamp, logLevel, clientId, logMessage, url });
 
-            switch (logMessage) {
-              case "CACHE_HIT":
-                stats.cacheHits++;
-                break;
-              case "CACHE_MISS":
-                stats.cacheMisses++;
-                break;
-              case "CONNECT":
-                stats.httpsTunnels++;
-                break;
+            if (logMessage.includes("CACHE_HIT")) {
+              stats.cacheHits++;
+              stats.totalRequests++;
+            } else if (logMessage.includes("CACHE_MISS")) {
+              stats.cacheMisses++;
+              stats.totalRequests++;
+            } else if (logMessage.includes("CONNECT")) {
+              stats.httpsTunnels++;
+              stats.totalRequests++;
+            } else if (logMessage === "HTTP Get request received.") {
+              stats.totalRequests++;
             }
-            stats.totalRequests++;
-          } catch {}
+          } catch (err) {
+            console.error("Error parsing line:", line, err);
+          }
         });
 
         updateDashboard(stats, logEntries);
@@ -473,11 +481,11 @@
           div.innerHTML = `
             <span class="text-gray">${entry.timestamp.split(" ")[1]}</span>
             <span class="${color}" style="min-width:100px;display:inline-block">${icon} ${
-            entry.logMessage
-          }</span>
+              entry.logMessage
+            }</span>
             <span>${entry.clientId} ${
-            entry.url ? `<span class="text-cyan">${entry.url}</span>` : ""
-          }</span>
+              entry.url ? `<span class="text-cyan">${entry.url}</span>` : ""
+            }</span>
           `;
           logFeedEl.appendChild(div);
         });

@@ -75,16 +75,14 @@ Each thread:
 ## 📁 Project Structure
 ```
 .
-├── proxy_main.c         # Main server: socket setup, bind, listen, accept loop
-├── proxy_main.h         #
-├── proxy_handler.c      # Core client logic: handles HTTP/HTTPS, request parsing
-├── proxy_handler.h      #
-├── proxy_cache.c        # Thread-safe LRU cache implementation
-├── proxy_cache.h        #
-├── proxy_logger.c       # Thread-safe file logger
-├── proxy_logger.h       #
-├── hashmap.c            # Hashmap 
-├── hashmap.h            #
+├── proxy_main.cpp         # Main server: socket setup, bind, listen, accept loop
+├── proxy_main.hpp         #
+├── proxy_handler.cpp      # Core client logic: handles HTTP/HTTPS, request parsing
+├── proxy_handler.hpp      #
+├── proxy_cache.cpp        # Thread-safe LRU cache implementation
+├── proxy_cache.hpp        #
+├── proxy_logger.cpp       # Thread-safe file logger
+├── proxy_logger.hpp       #
 ├── log_analyzer.html    # Standalone HTML/JS dashboard for log visualization
 └── README.md            # This file
 ```
