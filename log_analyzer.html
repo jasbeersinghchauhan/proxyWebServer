@@ -5,16 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Proxy Log Analyzer</title>
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Google Font -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
     <style>
+      /* --- GLOBAL STYLES --- */
       body {
         font-family: "Inter", sans-serif;
         background-color: #111827;
@@ -29,6 +28,7 @@
         margin: 0 auto;
       }
 
+      /* --- HEADER --- */
       .header {
         display: flex;
         justify-content: space-between;
@@ -40,6 +40,7 @@
         font-size: 2rem;
         font-weight: 700;
         color: #22d3ee;
+        margin: 0;
       }
 
       .subtitle {
@@ -47,7 +48,7 @@
         font-size: 0.875rem;
       }
 
-      /* Drop zone */
+      /* --- DROP ZONE --- */
       #dropZone {
         background-color: #1f2937;
         border: 2px dashed #4b5563;
@@ -74,6 +75,7 @@
         height: 48px;
         width: 48px;
         color: #9ca3af;
+        margin-bottom: 1rem;
       }
 
       #dropZone p {
@@ -82,14 +84,16 @@
 
       #dropZone .highlight {
         color: #22d3ee;
+        font-weight: 600;
       }
 
       #fileName {
         color: #9ca3af;
         font-size: 0.875rem;
+        margin-top: 0.5rem;
       }
 
-      /* Grid layout for stats */
+      /* --- STATS GRID --- */
       .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -101,25 +105,33 @@
         background-color: #1f2937;
         padding: 1.5rem;
         border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border: 1px solid #374151;
       }
 
       .card h3 {
         color: #9ca3af;
         font-size: 0.875rem;
-        margin-bottom: 0.5rem;
+        font-weight: 500;
+        margin: 0 0 0.5rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
 
       .card p {
-        font-size: 1.875rem;
-        font-weight: bold;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin: 0;
+        color: #f3f4f6;
       }
 
       #hitRate {
         color: #22c55e;
       }
 
-      /* Chart + log feed layout */
+      /* --- DASHBOARD --- */
       .dashboard {
         display: grid;
         grid-template-columns: 1fr;
@@ -136,52 +148,59 @@
         background-color: #1f2937;
         padding: 1.5rem;
         border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #374151;
+        display: flex;
+        flex-direction: column;
       }
 
       .panel h2 {
         font-size: 1.25rem;
-        margin-bottom: 1rem;
+        margin: 0 0 1.5rem 0;
         color: #fff;
+        font-weight: 600;
+        border-bottom: 1px solid #374151;
+        padding-bottom: 1rem;
       }
 
-      #cacheChart {
-        width: 100%;
+      #cacheChartContainer {
+        position: relative;
         height: 300px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
 
       #chartError {
         text-align: center;
-        color: #9ca3af;
+        color: #6b7280;
+        font-style: italic;
         display: none;
       }
 
-      /* Log Feed */
+      /* --- LOG FEED (Fixed Layout) --- */
       #logFeed {
-        height: 320px;
+        height: 400px;
         overflow-y: auto;
         background-color: #111827;
-        border-radius: 8px;
-        padding: 1rem;
-        font-family: monospace;
-        font-size: 0.875rem;
+        border-radius: 6px;
+        padding: 0.5rem;
+        font-family: "Menlo", "Monaco", "Courier New", monospace;
+        font-size: 0.8rem;
+        border: 1px solid #374151;
       }
 
-      #logFeed p {
-        color: #6b7280;
-        margin: 0;
-      }
-
-      /* Scrollbar styling */
+      /* Feed Scrollbar */
       #logFeed::-webkit-scrollbar {
-        width: 6px;
+        width: 8px;
       }
       #logFeed::-webkit-scrollbar-track {
-        background: #1f2937;
+        background: #111827;
       }
       #logFeed::-webkit-scrollbar-thumb {
         background: #4b5563;
-        border-radius: 3px;
+        border-radius: 4px;
       }
       #logFeed::-webkit-scrollbar-thumb:hover {
         background: #6b7280;
@@ -189,53 +208,78 @@
 
       .log-entry {
         display: flex;
-        align-items: start;
-        margin-bottom: 0.5rem;
+        align-items: flex-start;
+        padding: 4px 0;
+        border-bottom: 1px solid #1f2937;
+        gap: 12px;
       }
 
-      .log-entry span {
-        margin-right: 0.5rem;
+      .log-entry:last-child {
+        border-bottom: none;
       }
 
-      .text-gray {
+      /* FIXED COLUMNS: Prevent flexbox crushing */
+      .log-time {
+        color: #6b7280;
+        width: 85px;          /* Fixed width */
+        flex-shrink: 0;       /* Prevent shrinking */
+        white-space: nowrap;  /* No wrapping */
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .log-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 0;
+        width: 80px;          /* Fixed width */
+        flex-shrink: 0;       /* Prevent shrinking */
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .log-client {
+        color: #d1d5db;
+        width: 90px;          /* Fixed width */
+        flex-shrink: 0;       /* Prevent shrinking */
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .log-msg {
         color: #9ca3af;
+        word-break: break-all;
+        white-space: pre-wrap;
+        flex-grow: 1;         /* Take remaining space */
+        min-width: 0;         /* Critical for text overflow in flex */
       }
 
-      .text-green {
-        color: #4ade80;
-      }
-
-      .text-yellow {
-        color: #facc15;
-      }
-
-      .text-red {
-        color: #f87171;
-      }
-
-      .text-blue {
-        color: #60a5fa;
-      }
-
-      .text-purple {
-        color: #a78bfa;
-      }
-
-      .text-cyan {
-        color: #22d3ee;
-      }
+      /* Badge Colors */
+      .bg-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+      .bg-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+      .bg-yellow { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.2); }
+      .bg-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.2); }
+      .bg-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+      .bg-gray { background: #374151; color: #9ca3af; border: 1px solid #4b5563; }
+      .text-highlight { color: #22d3ee; }
     </style>
   </head>
 
   <body>
     <div class="container">
-      <!-- Header -->
       <div class="header">
-        <h1>Proxy Log Analyzer</h1>
-        <span class="subtitle">Powered by proxy.log</span>
+        <div>
+          <h1>Proxy Log Analyzer</h1>
+          <span class="subtitle">Fixed Layout & Robust Timestamp Parsing</span>
+        </div>
       </div>
 
-      <!-- File Drop Zone -->
       <div id="dropZone">
         <input
           type="file"
@@ -253,7 +297,7 @@
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
-            d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.33-2.348 5.25 5.25 0 014.286 5.85c-.068.355.143.702.502.834a4.5 4.5 0 01-.14 8.775H6.75z"
+            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
           />
         </svg>
         <p>
@@ -263,7 +307,6 @@
         <p id="fileName">No file selected</p>
       </div>
 
-      <!-- Stats -->
       <div class="stats-grid">
         <div class="card">
           <h3>Total Requests</h3>
@@ -283,30 +326,30 @@
         </div>
         <div class="card">
           <h3>HTTPS Tunnels</h3>
-          <p id="httpsNETSTunnels">0</p>
+          <p id="httpsTunnels">0</p>
         </div>
       </div>
 
-      <!-- Dashboard -->
       <div class="dashboard">
         <div class="panel">
           <h2>Cache Performance</h2>
-          <canvas id="cacheChart"></canvas>
-          <p id="chartError">No cache data to display.</p>
+          <div id="cacheChartContainer">
+            <canvas id="cacheChart"></canvas>
+            <p id="chartError">Waiting for data...</p>
+          </div>
         </div>
 
         <div class="panel">
-          <h2>Live Log Feed (Parsed)</h2>
+          <h2>Live Log Feed</h2>
           <div id="logFeed">
-            <p>
-              Upload a <code>proxy.log</code> file to see parsed output here...
-            </p>
+            <div style="text-align: center; color: #6b7280; padding-top: 2rem">
+              Upload a log file to view parsed entries here.
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- JavaScript (same logic, no Tailwind dependencies) -->
     <script>
       const dropZone = document.getElementById("dropZone");
       const fileInput = document.getElementById("fileInput");
@@ -315,28 +358,35 @@
       const hitRateEl = document.getElementById("hitRate");
       const cacheHitsEl = document.getElementById("cacheHits");
       const cacheMissesEl = document.getElementById("cacheMisses");
-      const httpsTunnelsEl = document.getElementById("httpsNETSTunnels");
+      const httpsTunnelsEl = document.getElementById("httpsTunnels");
       const logFeedEl = document.getElementById("logFeed");
       const chartErrorEl = document.getElementById("chartError");
       const chartCtx = document.getElementById("cacheChart").getContext("2d");
+
       let cacheChart = null;
 
+      // --- Event Listeners ---
       dropZone.addEventListener("click", () => fileInput.click());
-      fileInput.addEventListener("change", (e) =>
-        handleFile(e.target.files[0]),
-      );
+
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+      });
+
       dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
         dropZone.classList.add("drag-over");
       });
+
       dropZone.addEventListener("dragleave", (e) => {
         e.preventDefault();
         dropZone.classList.remove("drag-over");
       });
+
       dropZone.addEventListener("drop", (e) => {
         e.preventDefault();
         dropZone.classList.remove("drag-over");
-        handleFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files.length > 0)
+          handleFile(e.dataTransfer.files[0]);
       });
 
       function handleFile(file) {
@@ -348,6 +398,7 @@
         reader.readAsText(file);
       }
 
+      // --- Parsing Logic ---
       function parseLog(logText) {
         const stats = {
           totalRequests: 0,
@@ -355,70 +406,130 @@
           cacheMisses: 0,
           httpsTunnels: 0,
         };
+
         const logEntries = [];
         const lines = logText.split("\n").filter((l) => l.trim().length > 0);
 
         lines.forEach((line) => {
           try {
-            // FIX: Split directly by pipe "|" since there is no timestamp
-            const msgParts = line.split("|");
+            // 1. Safe Timestamp Extraction
+            // Finds the first ']' to separate the timestamp from the payload
+            const splitIndex = line.indexOf(']');
 
-            // We need at least 3 parts: Level, Client, Message
-            if (msgParts.length < 3) return;
+            let timestamp = "--:--:--";
+            let payload = line;
 
-            const logLevel = msgParts[0].trim();
-            const clientId = msgParts[1].trim();
-            const logMessage = msgParts[2].trim();
-            // URL is optional, located in the 4th part if it exists
-            const url = msgParts[3] ? msgParts[3].trim() : "";
-
-            // FIX: Add a dummy timestamp or placeholder since the log doesn't have one
-            const timestamp = "--:--:--";
-
-            logEntries.push({ timestamp, logLevel, clientId, logMessage, url });
-
-            if (logMessage.includes("CACHE_HIT")) {
-              stats.cacheHits++;
-              stats.totalRequests++;
-            } else if (logMessage.includes("CACHE_MISS")) {
-              stats.cacheMisses++;
-              stats.totalRequests++;
-            } else if (logMessage.includes("CONNECT")) {
-              stats.httpsTunnels++;
-              stats.totalRequests++;
-            } else if (logMessage === "HTTP Get request received.") {
-              stats.totalRequests++;
+            if (splitIndex !== -1) {
+              timestamp = line.substring(1, splitIndex).trim();
+              payload = line.substring(splitIndex + 1).trim();
             }
-          } catch (err) {
-            console.error("Error parsing line:", line, err);
-          }
+
+            // 2. Split Payload by Pipe
+            const parts = payload.split("|").map((p) => p.trim());
+            const logLevel = parts[0];
+            const component = parts[1];
+
+            let clientDisplay = "";
+            let badgeText = "";
+            let badgeClass = "bg-gray";
+            let message = "";
+
+            // 3. Identify Type & Parse Columns
+            if (component === "SERVER" || component === "CACHE") {
+               clientDisplay = component;
+               badgeText = logLevel;
+               message = parts[2] || "";
+               
+               if(logLevel === "ERROR") badgeClass = "bg-red";
+               else if(component === "CACHE") badgeClass = "bg-blue";
+
+            } else if (component === "REMOTE") {
+                clientDisplay = "REMOTE";
+                badgeText = "ERROR";
+                badgeClass = "bg-red";
+                message = parts[2] || "";
+
+            } else if (component === "CLIENT") {
+              // INFO|CLIENT|123|SUB_TYPE|Message
+              clientDisplay = `Client ${parts[2]}`;
+              const subType = parts[3];
+              message = parts[4] || "";
+
+              badgeText = subType;
+
+              // Categorize for Stats & Badge Color
+              if (subType === "CACHE_HIT") {
+                stats.cacheHits++;
+                stats.totalRequests++;
+                badgeClass = "bg-green";
+                badgeText = "HIT";
+              } else if (subType === "CACHE_MISS") {
+                stats.cacheMisses++;
+                stats.totalRequests++;
+                badgeClass = "bg-yellow";
+                badgeText = "MISS";
+              } else if (subType === "CONNECT") {
+                stats.httpsTunnels++;
+                stats.totalRequests++;
+                badgeClass = "bg-purple";
+                badgeText = "HTTPS";
+              } else if (subType === "HTTP") {
+                stats.totalRequests++;
+                badgeClass = "bg-blue";
+                badgeText = "HTTP";
+              } else {
+                badgeText = logLevel;
+                if(logLevel === "WARN") badgeClass = "bg-yellow";
+                if(logLevel === "ERROR") badgeClass = "bg-red";
+              }
+            } else {
+                clientDisplay = "SYSTEM";
+                badgeText = "LOG";
+                message = payload;
+            }
+
+            logEntries.push({ timestamp, clientDisplay, badgeText, badgeClass, message });
+
+          } catch (err) { console.warn("Skip:", line); }
         });
 
-        updateDashboard(stats, logEntries);
+        updateUI(stats, logEntries);
       }
 
-      function updateDashboard(stats, logEntries) {
+      // --- UI Updates ---
+      function updateUI(stats, logEntries) {
+        // 1. Update Number Cards
         totalRequestsEl.textContent = stats.totalRequests;
         cacheHitsEl.textContent = stats.cacheHits;
         cacheMissesEl.textContent = stats.cacheMisses;
         httpsTunnelsEl.textContent = stats.httpsTunnels;
-        const httpRequests = stats.cacheHits + stats.cacheMisses;
-        const hitRate =
-          httpRequests > 0 ? (stats.cacheHits / httpRequests) * 100 : 0;
-        hitRateEl.textContent = hitRate.toFixed(1) + "%";
+
+        const httpReqs = stats.cacheHits + stats.cacheMisses;
+        const rate = httpReqs > 0 ? (stats.cacheHits / httpReqs) * 100 : 0;
+        hitRateEl.textContent = rate.toFixed(1) + "%";
+
+        // 2. Update Chart
         updateChart(stats.cacheHits, stats.cacheMisses);
-        updateLogFeed(logEntries);
+
+        // 3. Update Feed
+        renderLogFeed(logEntries);
       }
 
       function updateChart(hits, misses) {
         if (cacheChart) cacheChart.destroy();
+
         if (hits === 0 && misses === 0) {
           chartErrorEl.style.display = "block";
+          document.getElementById("cacheChart").style.display = "none";
           return;
         }
+
         chartErrorEl.style.display = "none";
+        const canvas = document.getElementById("cacheChart");
+        canvas.style.display = "block";
+
         cacheChart = new Chart(chartCtx, {
-          type: "pie",
+          type: "doughnut",
           data: {
             labels: ["Cache Hits", "Cache Misses"],
             datasets: [
@@ -426,71 +537,76 @@
                 data: [hits, misses],
                 backgroundColor: ["#22c55e", "#ef4444"],
                 borderColor: "#1f2937",
-                borderWidth: 3,
+                borderWidth: 2,
+                hoverOffset: 4,
               },
             ],
           },
           options: {
             responsive: true,
+            maintainAspectRatio: false,
+            cutout: "75%",
             plugins: {
               legend: {
                 position: "bottom",
-                labels: { color: "#d1d5db" },
+                labels: {
+                  color: "#d1d5db",
+                  padding: 20,
+                  font: { family: "Inter" },
+                },
               },
             },
           },
         });
       }
 
-      function updateLogFeed(logEntries) {
+      function renderLogFeed(entries) {
         logFeedEl.innerHTML = "";
-        if (logEntries.length === 0) {
-          logFeedEl.innerHTML = "<p>No parsable log entries found.</p>";
+
+        if (entries.length === 0) {
+          logFeedEl.innerHTML =
+            '<div style="text-align: center; color: #6b7280; padding-top: 2rem;">No parsable log data found.</div>';
           return;
         }
 
-        logEntries.forEach((entry) => {
-          const div = document.createElement("div");
-          div.className = "log-entry";
-          let color = "text-gray";
-          let icon = "ℹ️";
+        const fragment = document.createDocumentFragment();
 
-          switch (entry.logMessage) {
-            case "CACHE_HIT":
-              color = "text-green";
-              icon = "✅";
-              break;
-            case "CACHE_MISS":
-              color = "text-yellow";
-              icon = "🔍";
-              break;
-            case "CONNECT":
-              color = "text-purple";
-              icon = "🔒";
-              break;
+        // Limit to last 2000 lines for performance if file is huge
+        const displayEntries =
+          entries.length > 2000 ? entries.slice(-2000) : entries;
+
+        displayEntries.forEach((entry) => {
+          const row = document.createElement("div");
+          row.className = "log-entry";
+
+          // Clean timestamp: remove date and ms if present, keep HH:MM:SS
+          let timeDisplay = entry.timestamp;
+          if (timeDisplay.includes(' ')) {
+             // Split by space to get time, then split by '.' to remove ms
+             timeDisplay = timeDisplay.split(' ')[1].split('.')[0]; 
           }
 
-          if (entry.logLevel === "ERROR" || entry.logLevel === "FATAL") {
-            color = "text-red";
-            icon = "❌";
-          } else if (entry.logLevel === "WARN") {
-            color = "text-yellow";
-            icon = "⚠️";
-          }
+          // Highlight URLs in message
+          let msgHtml = entry.message.replace(
+            /(https?:\/\/[^\s]+)/g,
+            '<span class="text-highlight">$1</span>',
+          );
 
-          div.innerHTML = `
-            <span class="text-gray">${entry.timestamp.split(" ")[1]}</span>
-            <span class="${color}" style="min-width:100px;display:inline-block">${icon} ${
-              entry.logMessage
-            }</span>
-            <span>${entry.clientId} ${
-              entry.url ? `<span class="text-cyan">${entry.url}</span>` : ""
-            }</span>
+          row.innerHTML = `
+            <span class="log-time" title="${entry.timestamp}">${timeDisplay}</span>
+            <span class="log-badge ${entry.badgeClass}">${entry.badgeText}</span>
+            <span class="log-client" title="${entry.clientDisplay}">${entry.clientDisplay}</span>
+            <span class="log-msg">${msgHtml}</span>
           `;
-          logFeedEl.appendChild(div);
+          fragment.appendChild(row);
         });
 
-        logFeedEl.scrollTop = logFeedEl.scrollHeight;
+        logFeedEl.appendChild(fragment);
+
+        // Auto-scroll to bottom
+        setTimeout(() => {
+          logFeedEl.scrollTop = logFeedEl.scrollHeight;
+        }, 50);
       }
     </script>
   </body>

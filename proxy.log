@@ -1,0 +1,216 @@
+[INFO]|SYSTEM|Logger initialized via unique_ptr.
+[2026-02-08 15:37:08.866577100] INFO|SERVER|Using port 8000 for connections
+[2026-02-08 15:37:08.872301900] INFO|SERVER|LRU Cache initialized.
+[2026-02-08 15:37:08.873166700] INFO|SERVER|Socket bound successfully to port 8000.
+[2026-02-08 15:37:08.873278100] INFO|SERVER|Listening on port 8000.
+[2026-02-08 15:37:08.938003800] INFO|SERVER|Connection accepted from 127.0.0.1:61267
+[2026-02-08 15:37:08.959352300] INFO|CLIENT|296|HTTP CONNECT request received.
+[2026-02-08 15:37:08.959480100] INFO|CLIENT|296|CONNECT|Tunneling to incoming.telemetry.mozilla.org
+[2026-02-08 15:37:09.109769400] INFO|SERVER|Connection accepted from 127.0.0.1:61264
+[2026-02-08 15:37:09.110072000] INFO|SERVER|Connection accepted from 127.0.0.1:61269
+[2026-02-08 15:37:09.110578200] INFO|CLIENT|380|HTTP Get request received.
+[2026-02-08 15:37:09.110810700] INFO|CLIENT|380|CACHE_MISS|http://www.example.com/
+[2026-02-08 15:37:09.110895300] INFO|CLIENT|380|REMOTE|Connecting to www.example.com:80
+[2026-02-08 15:37:09.188263100] INFO|SERVER|Connection accepted from 127.0.0.1:61265
+[2026-02-08 15:37:09.361551300] INFO|SERVER|Connection accepted from 127.0.0.1:61266
+[2026-02-08 15:37:09.715847400] INFO|CLIENT|380|REMOTE|Connected to www.example.com:80
+[2026-02-08 15:37:09.715924800] INFO|CLIENT|296|CONNECT|Tunnel established to incoming.telemetry.mozilla.org:443
+[2026-02-08 15:37:09.716080100] INFO|CLIENT|380|REMOTE|Forwarding: GET /
+[2026-02-08 15:37:09.717187800] INFO|CLIENT|380|REMOTE|Awaiting response from www.example.com:80
+[2026-02-08 15:37:09.811944900] INFO|CLIENT|380|REMOTE|Connection to www.example.com closed.
+[2026-02-08 15:37:10.580278300] INFO|SERVER|Connection accepted from 127.0.0.1:61274
+[2026-02-08 15:37:10.581350800] INFO|CLIENT|420|HTTP CONNECT request received.
+[2026-02-08 15:37:10.581644100] INFO|CLIENT|420|CONNECT|Tunneling to mozilla-ohttp.fastly-edge.com
+[2026-02-08 15:37:10.821425000] INFO|CLIENT|420|CONNECT|Tunnel established to mozilla-ohttp.fastly-edge.com:443
+[2026-02-08 15:37:12.729455700] INFO|SERVER|Connection accepted from 127.0.0.1:61277
+[2026-02-08 15:37:12.730139000] INFO|CLIENT|500|HTTP CONNECT request received.
+[2026-02-08 15:37:12.730228700] INFO|CLIENT|500|CONNECT|Tunneling to gemini.google.com
+[2026-02-08 15:37:12.760329000] INFO|SERVER|Connection accepted from 127.0.0.1:61279
+[2026-02-08 15:37:12.760937300] INFO|CLIENT|532|HTTP CONNECT request received.
+[2026-02-08 15:37:12.761034600] INFO|CLIENT|532|CONNECT|Tunneling to gemini.google.com
+[2026-02-08 15:37:12.773186700] INFO|SERVER|Connection accepted from 127.0.0.1:61281
+[2026-02-08 15:37:12.774157100] INFO|CLIENT|564|HTTP CONNECT request received.
+[2026-02-08 15:37:12.774229100] INFO|CLIENT|564|CONNECT|Tunneling to gemini.google.com
+[2026-02-08 15:37:12.777350000] INFO|SERVER|Connection accepted from 127.0.0.1:61283
+[2026-02-08 15:37:12.777870300] INFO|CLIENT|584|HTTP CONNECT request received.
+[2026-02-08 15:37:12.777931400] INFO|CLIENT|584|CONNECT|Tunneling to gemini.google.com
+[2026-02-08 15:37:12.783977800] INFO|SERVER|Connection accepted from 127.0.0.1:61285
+[2026-02-08 15:37:12.784430500] INFO|CLIENT|612|HTTP CONNECT request received.
+[2026-02-08 15:37:12.784528900] INFO|CLIENT|612|CONNECT|Tunneling to gemini.google.com
+[2026-02-08 15:37:12.788043300] INFO|SERVER|Connection accepted from 127.0.0.1:61287
+[2026-02-08 15:37:12.788525500] INFO|CLIENT|640|HTTP CONNECT request received.
+[2026-02-08 15:37:12.788656000] INFO|CLIENT|640|CONNECT|Tunneling to gemini.google.com
+[2026-02-08 15:37:13.073770500] INFO|CLIENT|564|CONNECT|Tunnel established to gemini.google.com:443
+[2026-02-08 15:37:13.073940400] INFO|CLIENT|584|CONNECT|Tunnel established to gemini.google.com:443
+[2026-02-08 15:37:13.073815100] INFO|CLIENT|640|CONNECT|Tunnel established to gemini.google.com:443
+[2026-02-08 15:37:13.073882400] INFO|CLIENT|612|CONNECT|Tunnel established to gemini.google.com:443
+[2026-02-08 15:37:13.073915900] INFO|CLIENT|500|CONNECT|Tunnel established to gemini.google.com:443
+[2026-02-08 15:37:13.073763800] INFO|CLIENT|532|CONNECT|Tunnel established to gemini.google.com:443
+[2026-02-08 15:37:13.220934500] INFO|SERVER|Connection accepted from 127.0.0.1:61289
+[2026-02-08 15:37:13.222346100] INFO|SERVER|Connection accepted from 127.0.0.1:61290
+[2026-02-08 15:37:13.222845700] INFO|CLIENT|660|HTTP CONNECT request received.
+[2026-02-08 15:37:13.222907700] INFO|CLIENT|660|CONNECT|Tunneling to signaler-pa.clients6.google.com
+[2026-02-08 15:37:13.586621700] INFO|CLIENT|660|CONNECT|Tunnel established to signaler-pa.clients6.google.com:443
+[2026-02-08 15:37:14.559569000] INFO|SERVER|Connection accepted from 127.0.0.1:61292
+[2026-02-08 15:37:14.560248100] INFO|CLIENT|708|HTTP CONNECT request received.
+[2026-02-08 15:37:14.560369200] INFO|CLIENT|708|CONNECT|Tunneling to play.google.com
+[2026-02-08 15:37:14.561635400] INFO|SERVER|Connection accepted from 127.0.0.1:61293
+[2026-02-08 15:37:14.562221500] INFO|CLIENT|736|HTTP CONNECT request received.
+[2026-02-08 15:37:14.562310300] INFO|CLIENT|736|CONNECT|Tunneling to play.google.com
+[2026-02-08 15:37:14.724633800] INFO|CLIENT|388|Client disconnected immediately or timed out.
+[2026-02-08 15:37:14.724750800] INFO|CLIENT|216|Client disconnected immediately or timed out.
+[2026-02-08 15:37:14.724786500] INFO|CLIENT|428|Client disconnected immediately or timed out.
+[2026-02-08 15:37:15.067498200] INFO|SERVER|Connection accepted from 127.0.0.1:61294
+[2026-02-08 15:37:15.068001400] INFO|CLIENT|764|HTTP CONNECT request received.
+[2026-02-08 15:37:15.068130500] INFO|CLIENT|764|CONNECT|Tunneling to www.google-analytics.com
+[2026-02-08 15:37:15.114285600] INFO|SERVER|Connection accepted from 127.0.0.1:61295
+[2026-02-08 15:37:15.744485500] INFO|SERVER|Connection accepted from 127.0.0.1:61296
+[2026-02-08 15:37:15.745154400] INFO|CLIENT|412|HTTP Get request received.
+[2026-02-08 15:37:15.745319500] INFO|CLIENT|412|CACHE_HIT|http://www.example.com/
+[2026-02-08 15:37:16.145715900] INFO|CLIENT|612|CONNECT|Tunnel to gemini.google.com:443 closed.
+[2026-02-08 15:37:18.091729900] INFO|CLIENT|764|CONNECT|Tunnel established to www.google-analytics.com:443
+[2026-02-08 15:37:18.094200500] INFO|CLIENT|708|CONNECT|Tunnel established to play.google.com:443
+[2026-02-08 15:37:18.094298900] INFO|CLIENT|736|CONNECT|Tunnel established to play.google.com:443
+[2026-02-08 15:37:18.104762000] INFO|CLIENT|500|CONNECT|Tunnel to gemini.google.com:443 closed.
+[2026-02-08 15:37:18.136984400] INFO|SERVER|Connection accepted from 127.0.0.1:61300
+[2026-02-08 15:37:18.253005200] INFO|SERVER|Connection accepted from 127.0.0.1:61301
+[2026-02-08 15:37:18.256202400] INFO|CLIENT|524|HTTP CONNECT request received.
+[2026-02-08 15:37:18.256504100] INFO|CLIENT|524|CONNECT|Tunneling to lh3.google.com
+[2026-02-08 15:37:18.733174300] INFO|SERVER|Connection accepted from 127.0.0.1:61302
+[2026-02-08 15:37:18.733765700] INFO|CLIENT|448|HTTP CONNECT request received.
+[2026-02-08 15:37:18.733914900] INFO|CLIENT|448|CONNECT|Tunneling to waa-pa.clients6.google.com
+[2026-02-08 15:37:18.789527400] INFO|CLIENT|664|Client disconnected immediately or timed out.
+[2026-02-08 15:37:18.897772100] INFO|SERVER|Connection accepted from 127.0.0.1:61303
+[2026-02-08 15:37:18.898390400] INFO|CLIENT|672|HTTP CONNECT request received.
+[2026-02-08 15:37:18.898478800] INFO|CLIENT|672|CONNECT|Tunneling to leetcode.com
+[2026-02-08 15:37:19.096726000] INFO|SERVER|Connection accepted from 127.0.0.1:61304
+[2026-02-08 15:37:19.097419400] INFO|CLIENT|516|HTTP CONNECT request received.
+[2026-02-08 15:37:19.097597300] INFO|CLIENT|516|CONNECT|Tunneling to ogads-pa.clients6.google.com
+[2026-02-08 15:37:19.099803000] INFO|SERVER|Connection accepted from 127.0.0.1:61305
+[2026-02-08 15:37:19.675301300] INFO|SERVER|Connection accepted from 127.0.0.1:61306
+[2026-02-08 15:37:19.817820000] INFO|SERVER|Connection accepted from 127.0.0.1:61307
+[2026-02-08 15:37:19.818494100] INFO|CLIENT|884|HTTP CONNECT request received.
+[2026-02-08 15:37:19.818583300] INFO|CLIENT|884|CONNECT|Tunneling to www.google.com
+[2026-02-08 15:37:20.318677600] INFO|CLIENT|524|CONNECT|Tunnel established to lh3.google.com:443
+[2026-02-08 15:37:20.762919900] INFO|CLIENT|448|CONNECT|Tunnel established to waa-pa.clients6.google.com:443
+[2026-02-08 15:37:20.958520200] INFO|CLIENT|672|CONNECT|Tunnel established to leetcode.com:443
+[2026-02-08 15:37:20.961801600] INFO|CLIENT|792|Client disconnected immediately or timed out.
+[2026-02-08 15:37:21.288661700] INFO|CLIENT|516|CONNECT|Tunnel established to ogads-pa.clients6.google.com:443
+[2026-02-08 15:37:21.589516200] INFO|CLIENT|512|HTTP CONNECT request received.
+[2026-02-08 15:37:21.589700700] INFO|CLIENT|512|CONNECT|Tunneling to signaler-pa.clients6.google.com
+[2026-02-08 15:37:21.760724200] INFO|SERVER|Connection accepted from 127.0.0.1:61314
+[2026-02-08 15:37:21.881003700] INFO|CLIENT|584|CONNECT|Tunnel to gemini.google.com:443 closed.
+[2026-02-08 15:37:22.001329300] INFO|CLIENT|884|CONNECT|Tunnel established to www.google.com:443
+[2026-02-08 15:37:22.016988300] INFO|CLIENT|512|CONNECT|Tunnel established to signaler-pa.clients6.google.com:443
+[2026-02-08 15:37:22.795552100] INFO|SERVER|Connection accepted from 127.0.0.1:61316
+[2026-02-08 15:37:22.796093100] INFO|CLIENT|908|HTTP CONNECT request received.
+[2026-02-08 15:37:22.796176000] INFO|CLIENT|908|CONNECT|Tunneling to www.youtube.com
+[2026-02-08 15:37:24.083636400] INFO|CLIENT|396|Client disconnected immediately or timed out.
+[2026-02-08 15:37:25.084610800] INFO|CLIENT|840|Client disconnected immediately or timed out.
+[2026-02-08 15:37:25.568240000] INFO|CLIENT|908|CONNECT|Tunnel established to www.youtube.com:443
+[2026-02-08 15:37:27.106130200] INFO|CLIENT|440|Client disconnected immediately or timed out.
+[2026-02-08 15:37:27.110458400] INFO|SERVER|Connection accepted from 127.0.0.1:61319
+[2026-02-08 15:37:27.110961100] INFO|CLIENT|932|HTTP CONNECT request received.
+[2026-02-08 15:37:27.111043700] INFO|CLIENT|932|CONNECT|Tunneling to lh3.googleusercontent.com
+[2026-02-08 15:37:27.254893400] INFO|SERVER|Connection accepted from 127.0.0.1:61320
+[2026-02-08 15:37:27.255264800] INFO|CLIENT|864|HTTP Get request received.
+[2026-02-08 15:37:27.255343000] INFO|CLIENT|864|CACHE_HIT|http://www.example.com/
+[2026-02-08 15:37:28.946626900] INFO|CLIENT|932|CONNECT|Tunnel established to lh3.googleusercontent.com:443
+[2026-02-08 15:37:28.946626800] INFO|CLIENT|708|CONNECT|Tunnel to play.google.com:443 closed.
+[2026-02-08 15:37:29.711312100] INFO|SERVER|Connection accepted from 127.0.0.1:61323
+[2026-02-08 15:37:30.268594000] INFO|SERVER|Connection accepted from 127.0.0.1:61324
+[2026-02-08 15:37:30.269186400] INFO|CLIENT|940|HTTP Get request received.
+[2026-02-08 15:37:30.269302500] INFO|CLIENT|940|CACHE_HIT|http://www.example.com/
+[2026-02-08 15:37:30.360240100] INFO|SERVER|Connection accepted from 127.0.0.1:61325
+[2026-02-08 15:37:30.361597000] INFO|CLIENT|952|HTTP CONNECT request received.
+[2026-02-08 15:37:30.361739400] INFO|CLIENT|952|CONNECT|Tunneling to i.ytimg.com
+[2026-02-08 15:37:30.992158000] INFO|CLIENT|640|CONNECT|Tunnel to gemini.google.com:443 closed.
+[2026-02-08 15:37:31.017306500] INFO|SERVER|Connection accepted from 127.0.0.1:61326
+[2026-02-08 15:37:31.312640300] INFO|SERVER|Connection accepted from 127.0.0.1:61327
+[2026-02-08 15:37:31.512396500] INFO|CLIENT|448|CONNECT|Tunnel to waa-pa.clients6.google.com:443 closed.
+[2026-02-08 15:37:32.531154900] INFO|CLIENT|512|CONNECT|Tunnel to signaler-pa.clients6.google.com:443 closed.
+[2026-02-08 15:37:33.774512600] INFO|SERVER|Connection accepted from 127.0.0.1:61329
+[2026-02-08 15:37:33.774961100] INFO|CLIENT|644|HTTP CONNECT request received.
+[2026-02-08 15:37:33.775047800] INFO|CLIENT|644|CONNECT|Tunneling to googleads.g.doubleclick.net
+[2026-02-08 15:37:33.861366600] INFO|CLIENT|952|CONNECT|Tunnel established to i.ytimg.com:443
+[2026-02-08 15:37:34.290473100] INFO|SERVER|Connection accepted from 127.0.0.1:61330
+[2026-02-08 15:37:34.290985100] INFO|CLIENT|1000|HTTP CONNECT request received.
+[2026-02-08 15:37:34.291060000] INFO|CLIENT|1000|CONNECT|Tunneling to o6871.ingest.sentry.io
+[2026-02-08 15:37:34.390968900] INFO|SERVER|Connection accepted from 127.0.0.1:61331
+[2026-02-08 15:37:34.392209100] INFO|SERVER|Connection accepted from 127.0.0.1:61332
+[2026-02-08 15:37:34.392538800] INFO|CLIENT|1008|HTTP CONNECT request received.
+[2026-02-08 15:37:34.392625700] INFO|CLIENT|1008|CONNECT|Tunneling to i.ytimg.com
+[2026-02-08 15:37:34.393105500] INFO|CLIENT|1016|HTTP CONNECT request received.
+[2026-02-08 15:37:34.393226100] INFO|CLIENT|1016|CONNECT|Tunneling to tpc.googlesyndication.com
+[2026-02-08 15:37:34.394300500] INFO|SERVER|Connection accepted from 127.0.0.1:61334
+[2026-02-08 15:37:34.543859400] INFO|SERVER|Connection accepted from 127.0.0.1:61335
+[2026-02-08 15:37:34.544323900] INFO|CLIENT|1060|HTTP CONNECT request received.
+[2026-02-08 15:37:34.544403100] INFO|CLIENT|1060|CONNECT|Tunneling to accounts.google.com
+[2026-02-08 15:37:34.718670000] INFO|CLIENT|1044|HTTP CONNECT request received.
+[2026-02-08 15:37:34.718814600] INFO|CLIENT|1044|CONNECT|Tunneling to yt3.ggpht.com
+[2026-02-08 15:37:34.853153800] INFO|SERVER|Connection accepted from 127.0.0.1:61337
+[2026-02-08 15:37:34.853533800] INFO|CLIENT|1100|HTTP CONNECT request received.
+[2026-02-08 15:37:34.853602200] INFO|CLIENT|1100|CONNECT|Tunneling to www.google.co.in
+[2026-02-08 15:37:34.931501200] INFO|CLIENT|1008|CONNECT|Tunnel established to i.ytimg.com:443
+[2026-02-08 15:37:35.143524000] INFO|CLIENT|684|Client disconnected immediately or timed out.
+[2026-02-08 15:37:35.284999400] INFO|SERVER|Connection accepted from 127.0.0.1:61338
+[2026-02-08 15:37:35.305154400] INFO|CLIENT|644|CONNECT|Tunnel established to googleads.g.doubleclick.net:443
+[2026-02-08 15:37:35.559564900] INFO|SERVER|Connection accepted from 127.0.0.1:61339
+[2026-02-08 15:37:35.562466200] INFO|CLIENT|1136|HTTP CONNECT request received.
+[2026-02-08 15:37:35.562579500] INFO|CLIENT|1136|CONNECT|Tunneling to api.vidiq.com
+[2026-02-08 15:37:36.172812000] INFO|CLIENT|652|Client disconnected immediately or timed out.
+[2026-02-08 15:37:36.214081100] INFO|SERVER|Connection accepted from 127.0.0.1:61342
+[2026-02-08 15:37:36.215105000] INFO|CLIENT|976|HTTP CONNECT request received.
+[2026-02-08 15:37:36.215255600] INFO|CLIENT|976|CONNECT|Tunneling to accounts.youtube.com
+[2026-02-08 15:37:36.529103300] INFO|CLIENT|644|CONNECT|Tunnel to googleads.g.doubleclick.net:443 closed.
+[2026-02-08 15:37:36.562307100] INFO|CLIENT|1008|CONNECT|Tunnel to i.ytimg.com:443 closed.
+[2026-02-08 15:37:36.802288400] INFO|CLIENT|1016|CONNECT|Tunnel established to tpc.googlesyndication.com:443
+[2026-02-08 15:37:36.802390200] INFO|CLIENT|1000|CONNECT|Tunnel established to o6871.ingest.sentry.io:443
+[2026-02-08 15:37:36.802490600] INFO|CLIENT|1016|CONNECT|Tunnel to tpc.googlesyndication.com:443 closed.
+[2026-02-08 15:37:37.180740000] INFO|CLIENT|980|Client disconnected immediately or timed out.
+[2026-02-08 15:37:38.060240600] INFO|CLIENT|1100|CONNECT|Tunnel established to www.google.co.in:443
+[2026-02-08 15:37:38.061278700] INFO|CLIENT|1100|CONNECT|Tunnel to www.google.co.in:443 closed.
+[2026-02-08 15:37:38.077450000] INFO|CLIENT|1060|CONNECT|Tunnel established to accounts.google.com:443
+[2026-02-08 15:37:38.160060800] INFO|CLIENT|1044|CONNECT|Tunnel established to yt3.ggpht.com:443
+[2026-02-08 15:37:41.203056700] INFO|CLIENT|628|Client disconnected immediately or timed out.
+[2026-02-08 15:37:41.744308300] INFO|CLIENT|1136|CONNECT|Tunnel established to api.vidiq.com:443
+[2026-02-08 15:37:41.874522600] INFO|CLIENT|976|CONNECT|Tunnel established to accounts.youtube.com:443
+[2026-02-08 15:37:41.874889900] INFO|CLIENT|976|CONNECT|Tunnel to accounts.youtube.com:443 closed.
+[2026-02-08 15:37:43.493054600] INFO|SERVER|Connection accepted from 127.0.0.1:64242
+[2026-02-08 15:37:43.493872200] INFO|CLIENT|800|HTTP CONNECT request received.
+[2026-02-08 15:37:43.493994000] INFO|CLIENT|800|CONNECT|Tunneling to o6871.ingest.sentry.io
+[2026-02-08 15:37:43.666402700] INFO|SERVER|Connection accepted from 127.0.0.1:64244
+[2026-02-08 15:37:43.666840300] INFO|CLIENT|1012|HTTP CONNECT request received.
+[2026-02-08 15:37:43.666958100] INFO|CLIENT|1012|CONNECT|Tunneling to o6871.ingest.sentry.io
+[2026-02-08 15:37:44.212442500] INFO|CLIENT|800|CONNECT|Tunnel established to o6871.ingest.sentry.io:443
+[2026-02-08 15:37:44.271585700] INFO|CLIENT|1012|CONNECT|Tunnel established to o6871.ingest.sentry.io:443
+[2026-02-08 15:37:46.264407600] INFO|SERVER|Connection accepted from 127.0.0.1:64246
+[2026-02-08 15:37:46.268023900] INFO|SERVER|Connection accepted from 127.0.0.1:64247
+[2026-02-08 15:37:46.269094400] INFO|CLIENT|992|HTTP CONNECT request received.
+[2026-02-08 15:37:46.269262600] INFO|CLIENT|992|CONNECT|Tunneling to www.googletagmanager.com
+[2026-02-08 15:37:46.330130100] INFO|SERVER|Connection accepted from 127.0.0.1:64248
+[2026-02-08 15:37:46.370016800] INFO|SERVER|Connection accepted from 127.0.0.1:64249
+[2026-02-08 15:37:46.372141100] INFO|CLIENT|1180|HTTP CONNECT request received.
+[2026-02-08 15:37:46.372246300] INFO|CLIENT|1180|CONNECT|Tunneling to api-os.growingio.com
+[2026-02-08 15:37:46.374511900] INFO|SERVER|Connection accepted from 127.0.0.1:64250
+[2026-02-08 15:37:46.375128500] INFO|CLIENT|1208|HTTP CONNECT request received.
+[2026-02-08 15:37:46.375209200] INFO|CLIENT|1208|CONNECT|Tunneling to tags.growingio.com
+[2026-02-08 15:37:48.941456100] INFO|CLIENT|1060|CONNECT|Tunnel to accounts.google.com:443 closed.
+[2026-02-08 15:37:50.507486300] INFO|SERVER|Signal for shutdown received...
+[2026-02-08 15:37:50.507750900] INFO|SERVER|Shutting down...
+[2026-02-08 15:37:50.507847900] INFO|SERVER|Waiting for active connections to finish...
+[2026-02-08 15:37:51.779758100] INFO|CLIENT|804|Client disconnected immediately or timed out.
+[2026-02-08 15:37:51.779905600] INFO|CLIENT|996|Client disconnected immediately or timed out.
+[2026-02-08 15:37:52.108362300] INFO|SERVER|Signal for shutdown received...
+[2026-02-08 15:37:52.302602000] INFO|CLIENT|992|CONNECT|Tunnel established to www.googletagmanager.com:443
+[2026-02-08 15:37:52.304087500] INFO|CLIENT|992|CONNECT|Tunnel to www.googletagmanager.com:443 closed.
+[2026-02-08 15:37:52.779733100] INFO|CLIENT|1180|CONNECT|Tunnel established to api-os.growingio.com:443
+[2026-02-08 15:37:52.780231900] INFO|CLIENT|1180|CONNECT|Tunnel to api-os.growingio.com:443 closed.
+[2026-02-08 15:37:52.796805500] INFO|CLIENT|1208|CONNECT|Tunnel established to tags.growingio.com:443
+[2026-02-08 15:37:52.798424100] INFO|CLIENT|1208|CONNECT|Tunnel to tags.growingio.com:443 closed.
+[2026-02-08 15:37:53.422901600] INFO|CLIENT|1012|CONNECT|Tunnel to o6871.ingest.sentry.io:443 closed.
+[2026-02-08 15:37:53.757049400] INFO|CLIENT|800|CONNECT|Tunnel to o6871.ingest.sentry.io:443 closed.
+[2026-02-08 15:37:54.533982500] INFO|SERVER|Signal for shutdown received...
+[2026-02-08 15:37:59.776056000] INFO|SERVER|Signal for shutdown received...
+[2026-02-08 15:38:00.080196800] INFO|SERVER|Signal for shutdown received...
+[2026-02-08 15:38:11.958484800] INFO|SERVER|Signal for shutdown received...

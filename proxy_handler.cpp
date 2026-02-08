@@ -13,9 +13,11 @@
 
 #include "proxy_handler.hpp"
 #include "proxy_cache.hpp"
+#include "proxy_logger.hpp"
 
 constexpr size_t MAX_HEADER_SIZE = 8192;
-constexpr size_t RECV_CHUNK_SIZE = 4096;
+constexpr size_t HTTPS_RECV_BUFFER_SIZE = 8192;
+constexpr size_t HTTP_RECV_BUFFER_SIZE = 4096;
 
 constexpr std::string_view HTTP_END = "\r\n";
 constexpr std::string_view HEADER_END = "\r\n\r\n";
@@ -24,7 +26,7 @@ ProxyHandler::ProxyHandler() {}
 
 ProxyHandler::~ProxyHandler() {}
 
-void ProxyHandler::send_error(const SOCKET &client_socket, int status_code, const std::string &message)
+void ProxyHandler::sendHttpError(const SOCKET &client_socket, int status_code, const std::string &message)
 {
     std::string body = "<html><body><h1>" + std::to_string(status_code) + " " + message + "</h1></body></html>";
     std::string response = "HTTP/1.1 " + std::to_string(status_code) + " " + message + "\r\n" +
@@ -46,7 +48,7 @@ void ProxyHandler::send_error(const SOCKET &client_socket, int status_code, cons
     }
 }
 
-std::string ProxyHandler::parse_request_target(const std::vector<char> &request)
+std::string ProxyHandler::parseRequestTarget(const std::vector<char> &request)
 {
     auto first_space = std::find(request.begin(), request.end(), ' ');
     if (first_space == request.end())
@@ -62,11 +64,11 @@ std::string ProxyHandler::parse_request_target(const std::vector<char> &request)
     return std::string(target_start, target_end);
 }
 
-bool ProxyHandler::parse_http_request(const std::string &url, HttpRequestPart &request_part)
+bool ProxyHandler::parseHttpUrl(const std::string &url, HttpRequestPart &request_Part)
 {
     if (url.empty())
     {
-        std::cout << "WARN|HTTP|Empty URL provided for parsing.\n";
+        log("WARN|HTTP|Empty URL provided for parsing.\n");
         return false;
     }
 
@@ -74,7 +76,7 @@ bool ProxyHandler::parse_http_request(const std::string &url, HttpRequestPart &r
     size_t protocol_pos = url.find(protocol_delimiter);
     if (protocol_pos == std::string::npos)
     {
-        std::cout << "WARN|HTTP|Malformed URL: Missing protocol delimiter.\n";
+        log("WARN|HTTP|Malformed URL: Missing protocol delimiter.\n");
         return false;
     }
 
@@ -86,18 +88,18 @@ bool ProxyHandler::parse_http_request(const std::string &url, HttpRequestPart &r
     if (path_start == std::string::npos)
     {
         authority_segment = url.substr(host_start);
-        request_part.path = "/";
+        request_Part.path = "/";
     }
     else
     {
         authority_segment = url.substr(host_start, path_start - host_start);
-        request_part.path = url.substr(path_start);
+        request_Part.path = url.substr(path_start);
     }
 
     size_t port_pos = authority_segment.rfind(":");
     if (port_pos != std::string::npos)
     {
-        request_part.host = authority_segment.substr(0, port_pos);
+        request_Part.host = authority_segment.substr(0, port_pos);
         std::string port_str = authority_segment.substr(port_pos + 1);
 
         if (port_str.empty())
@@ -120,17 +122,17 @@ bool ProxyHandler::parse_http_request(const std::string &url, HttpRequestPart &r
             return false;
         }
 
-        request_part.port = port_str;
+        request_Part.port = port_str;
     }
     else
     {
-        request_part.host = authority_segment;
-        request_part.port = "80";
+        request_Part.host = authority_segment;
+        request_Part.port = "80";
     }
     return true;
 }
 
-bool ProxyHandler::parse_method(const std::vector<char> &request_buffer, const std::string &method)
+bool ProxyHandler::isMethod(const std::vector<char> &request_buffer, const std::string &method)
 {
     const int method_length = method.length();
 
@@ -145,12 +147,12 @@ bool ProxyHandler::parse_method(const std::vector<char> &request_buffer, const s
     return true;
 }
 
-SOCKET ProxyHandler::connect_to_remote_host(const HttpRequestPart &request_part)
+SOCKET ProxyHandler::connectToRemoteHost(const std::string &host, const std::string &port)
 {
     SOCKET remote_server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (remote_server_socket == INVALID_SOCKET)
     {
-        std::cout << "ERROR|Failed to create socket for remote host " << request_part.host << ":" << request_part.port << "\n";
+        log("ERROR|REMOTE|Failed to create socket for remote host {}:{}\n", host, port);
         return INVALID_SOCKET;
     }
 
@@ -163,16 +165,16 @@ SOCKET ProxyHandler::connect_to_remote_host(const HttpRequestPart &request_part)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-    if (getaddrinfo(request_part.host.c_str(), request_part.port.c_str(), &hints, &result) != 0)
+    if (getaddrinfo(host.c_str(), port.c_str(), &hints, &result) != 0)
     {
-        std::cout << "ERROR|Failed to resolve host: " << request_part.host << "\n";
+        log("ERROR|REMOTE|Failed to resolve host: {}\n", host);
         closesocket(remote_server_socket);
         return INVALID_SOCKET;
     }
 
     if (connect(remote_server_socket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
     {
-        std::cout << "ERROR|Failed to connect to remote host " << request_part.host << ":" << request_part.port << "\n";
+        log("ERROR|REMOTE|Failed to connect to remote host {}:{}\n", host, port);
         freeaddrinfo(result);
         closesocket(remote_server_socket);
         return INVALID_SOCKET;
@@ -182,7 +184,7 @@ SOCKET ProxyHandler::connect_to_remote_host(const HttpRequestPart &request_part)
     return remote_server_socket;
 }
 
-void ProxyHandler::client_handler(const SOCKET client_socket, proxy_cache::Cache &cache_system, std::counting_semaphore<INT_MAX> &connection_semaphore)
+void ProxyHandler::handleClient(const SOCKET client_socket, proxy_cache::Cache &cache_system, std::counting_semaphore<INT_MAX> &connection_semaphore)
 {
     SemaphoreGuard guard(connection_semaphore);
     SocketGuard socket_guard(client_socket);
@@ -195,27 +197,137 @@ void ProxyHandler::client_handler(const SOCKET client_socket, proxy_cache::Cache
     const int client_id = (int)client_socket;
 
     std::vector<char> request_buffer;
-    char temp_buffer[RECV_CHUNK_SIZE];
+    char temp_buffer[HTTP_RECV_BUFFER_SIZE];
 
-    int bytes_received = recv(client_socket, temp_buffer, RECV_CHUNK_SIZE, 0);
+    int bytes_received = recv(client_socket, temp_buffer, HTTP_RECV_BUFFER_SIZE, 0);
 
     if (bytes_received <= 0)
     {
-        std::cout << "INFO|CLIENT " << client_id << "|Client disconnected immediately or timed out.\n";
+        log("INFO|CLIENT|{}|Client disconnected immediately or timed out.\n", client_id);
         return;
     }
 
     request_buffer.insert(request_buffer.end(), temp_buffer, temp_buffer + bytes_received);
     int total_bytes_received = bytes_received;
 
-    if (parse_method(request_buffer, "CONNECT "))
+    if (isMethod(request_buffer, "CONNECT ")) // HTTPS CONNECT Section
     {
-        std::cout << "INFO|CLIENT " << client_id << "|HTTP CONNECT method not supported.\n";
-        return;
+        log("INFO|CLIENT|{}|HTTP CONNECT request received.\n", client_id);
+
+        std::string host;
+        std::string port = "443";
+
+        std::string url = parseRequestTarget(request_buffer);
+        if (url.empty())
+        {
+            log("WARN|CLIENT|{}|HTTPS|Malformed HTTPS request.\n", client_id);
+            return;
+        }
+
+        size_t port_pos = url.rfind(":");
+        if (port_pos != std::string::npos)
+        {
+            host = url.substr(0, port_pos);
+            port = url.substr(port_pos + 1);
+        }
+        else
+            host = url.substr(0);
+
+        log("INFO|CLIENT|{}|CONNECT|Tunneling to {}\n", client_id, host);
+
+        SOCKET remote_server_socket = connectToRemoteHost(host, port);
+
+        SocketGuard remote_socket_guard(remote_server_socket);
+
+        if (remote_server_socket == INVALID_SOCKET)
+        {
+            log("ERROR|CLIENT|{}|CONNECT|Failed to connect to {}\n", client_id, host);
+            return;
+        }
+
+        log("INFO|CLIENT|{}|CONNECT|Tunnel established to {}:{}\n", client_id, host, port);
+
+        std::string rebuilt = "HTTP/1.1 200 OK \r\n\r\n";
+
+        int sent_rebuilt = 0;
+        while (sent_rebuilt < rebuilt.size())
+        {
+            int len = send(client_socket, rebuilt.data(), rebuilt.size() - sent_rebuilt, 0);
+            sent_rebuilt += len;
+        }
+
+        fd_set read_fds;
+
+        struct timeval select_timeout;
+        select_timeout.tv_sec = 100;
+        select_timeout.tv_usec = 0;
+
+        char tunnel_buffer[HTTPS_RECV_BUFFER_SIZE];
+
+        while (true)
+        {
+            FD_ZERO(&read_fds);
+
+            FD_SET(client_socket, &read_fds);
+            FD_SET(remote_server_socket, &read_fds);
+
+            SOCKET max_socket_descriptor = (client_socket > remote_server_socket) ? client_socket : remote_server_socket;
+
+            int activity = select(max_socket_descriptor + 1, &read_fds, NULL, NULL, &select_timeout);
+            if (activity == SOCKET_ERROR)
+            {
+                log("ERROR|CLIENT|{}|CONNECT|select() failed {}\n", client_id, WSAGetLastError());
+                break;
+            }
+            else if (activity == 0)
+            {
+                log("INFO|CLIENT|{}|CONNECT|Tunnel timed out for {}:{}\n", client_id, host, port);
+                break;
+            }
+
+
+            if (FD_ISSET(client_socket, &read_fds))
+            {
+                int len = recv(client_socket, tunnel_buffer, HTTPS_RECV_BUFFER_SIZE, 0);
+
+                if (len <= 0)
+                    break;
+
+                int total_sent = 0;
+                while (total_sent < len)
+                {
+                    int send_data = send(remote_server_socket, tunnel_buffer + total_sent, len - total_sent, 0);
+                    total_sent += send_data;
+
+                    if (send_data == SOCKET_ERROR)
+                        return;
+                }
+            }
+
+            if (FD_ISSET(remote_server_socket, &read_fds))
+            {
+                int len = recv(remote_server_socket, tunnel_buffer, HTTPS_RECV_BUFFER_SIZE, 0);
+
+                if (len <= 0)
+                    break;
+
+                int total_sent = 0;
+                while (total_sent < len)
+                {
+                    int send_data = send(client_socket, tunnel_buffer + total_sent, len - total_sent, 0);
+                    total_sent += send_data;
+
+                    if (send_data == SOCKET_ERROR)
+                        return;
+                }
+            }
+        }
+
+        log("INFO|CLIENT|{}|CONNECT|Tunnel to {}:{} closed.\n", client_id, host, port);
     }
-    else if (parse_method(request_buffer, "GET ")) // HTTP GET Section
+    else if (isMethod(request_buffer, "GET ")) // HTTP GET Section
     {
-        std::cout << "INFO|CLIENT " << client_id << "|HTTP Get request received.\n";
+        log("INFO|CLIENT|{}|HTTP Get request received.\n", client_id);
 
         while (true)
         {
@@ -226,15 +338,15 @@ void ProxyHandler::client_handler(const SOCKET client_socket, proxy_cache::Cache
 
             if (total_bytes_received >= MAX_HEADER_SIZE)
             {
-                std::cout << "WARN|CLIENT " << client_id << "|HTTP|Header too large.\n";
+                log("WARN|CLIENT|{}|HTTP|Header too large.\n", client_id);
                 return;
             }
 
-            bytes_received = recv(client_socket, temp_buffer, RECV_CHUNK_SIZE, 0);
+            bytes_received = recv(client_socket, temp_buffer, HTTP_RECV_BUFFER_SIZE, 0);
 
             if (bytes_received <= 0)
             {
-                std::cout << "INFO|CLIENT " << client_id << "|Client disconnected while receiving HTTP headers.\n";
+                log("INFO|CLIENT|{}|Client disconnected while receiving HTTP headers.\n", client_id);
                 return;
             }
             request_buffer.insert(request_buffer.end(), temp_buffer, temp_buffer + bytes_received);
@@ -244,56 +356,54 @@ void ProxyHandler::client_handler(const SOCKET client_socket, proxy_cache::Cache
         // Absolute-form only
         // E.g. GET http://example.com::port/path HTTP/1.1
 
-        std::string url = parse_request_target(request_buffer);
+        std::string url = parseRequestTarget(request_buffer);
 
         if (url.empty())
         {
-            std::cout << "WARN|CLIENT " << client_id << "|HTTP|Malformed HTTP request.\n";
+            log("WARN|CLIENT|{}|HTTP|Malformed HTTP request.\n", client_id);
             return;
         }
 
-        std::vector<char> cached_response = cache_system.cache_find(url);
+        std::vector<char> cached_response = cache_system.cacheFind(url);
 
         if (!cached_response.empty())
         {
-            std::cout << "INFO|CLIENT " << client_id << "|CACHE_HIT|" << url << "\n";
+            log("INFO|CLIENT|{}|CACHE_HIT|{}\n", client_id, url);
             send(client_socket, cached_response.data(), cached_response.size(), 0);
         }
         else
         {
-            std::cout << "INFO|CLIENT " << client_id << "|CACHE_MISS|" << url << "\n";
+            log("INFO|CLIENT|{}|CACHE_MISS|{}\n", client_id, url);
 
-            HttpRequestPart request_part;
+            HttpRequestPart request_Part;
 
-            if (!parse_http_request(url, request_part))
+            if (!parseHttpUrl(url, request_Part))
             {
-                std::cout << "WARN|CLIENT " << client_id << "|HTTP|Failed to parse HTTP request.\n";
+                log("WARN|CLIENT|{}|HTTP|Failed to parse HTTP request.\n", client_id);
                 return;
             }
 
-            std::cout << "INFO|CLIENT " << client_id << "|REMOTE|Connecting to " << request_part.host << ":" << request_part.port << "\n";
+            log("INFO|CLIENT|{}|REMOTE|Connecting to {}:{}\n", client_id, request_Part.host, request_Part.port);
 
-            SOCKET remote_server_socket = connect_to_remote_host(request_part);
+            SOCKET remote_server_socket = connectToRemoteHost(request_Part.host, request_Part.port);
             if (remote_server_socket == INVALID_SOCKET)
             {
-                std::cout << "ERROR|CLIENT " << client_id << "|REMOTE|Failed to connect to remote host.\n";
-                send_error(client_socket, 502, "Bad Gateway");
+                log("ERROR|CLIENT|{}|REMOTE|Failed to connect to remote host.\n", client_id);
+                sendHttpError(client_socket, 502, "Bad Gateway");
                 return;
             }
 
             SocketGuard remote_socket_guard(remote_server_socket);
 
-            std::cout << "INFO|CLIENT " << client_id << "|REMOTE|Connected to " << request_part.host << ":" << request_part.port << "\n";
+            log("INFO|CLIENT|{}|REMOTE|Connected to {}:{}\n", client_id, request_Part.host, request_Part.port);
 
             std::vector<char> modified_request;
             modified_request.reserve(request_buffer.size());
 
-            std::string rebuilt = "GET " + request_part.path + " HTTP/1.1\r\n" + 
-            "Host: " + request_part.host + "\r\n" + 
-            "Connection: close\r\n";
+            std::string rebuilt = "GET " + request_Part.path + " HTTP/1.1\r\n" +
+                                  "Host: " + request_Part.host + "\r\n" +
+                                  "Connection: close\r\n";
             modified_request.insert(modified_request.end(), rebuilt.begin(), rebuilt.end());
-
-            bool connection_header_found = false, host_header_found = false;
 
             auto it_start = std::search(request_buffer.begin(), request_buffer.end(), HTTP_END.begin(), HTTP_END.end());
             if (it_start == request_buffer.end())
@@ -340,23 +450,23 @@ void ProxyHandler::client_handler(const SOCKET client_socket, proxy_cache::Cache
                 it_start = it_end + HTTP_END.size();
             }
 
-            std::cout << "INFO|CLIENT " << client_id << "|REMOTE|Forwarding: GET " << request_part.path << "\n";
+            log("INFO|CLIENT|{}|REMOTE|Forwarding: GET {}\n", client_id, request_Part.path);
 
             if (send(remote_server_socket, modified_request.data(), modified_request.size(), 0) == SOCKET_ERROR)
             {
-                std::cerr << "INFO|CLIENT " << client_id << "|REMOTE|send() failed: " << WSAGetLastError() << "\n";
+                log("INFO|CLIENT|{}|REMOTE|send() failed: {}\n", client_id, WSAGetLastError());
                 return;
             }
 
-            std::cout << "INFO|CLIENT " << client_id << "|REMOTE|Awaiting response from " << request_part.host << ":" << request_part.port << "\n";
+            log("INFO|CLIENT|{}|REMOTE|Awaiting response from {}:{}\n", client_id, request_Part.host, request_Part.port);
 
             std::vector<char> server_response_data;
 
             int total_bytes_received = 0;
             while (true)
             {
-                char temp_buffer[RECV_CHUNK_SIZE];
-                int bytes_received = recv(remote_server_socket, temp_buffer, RECV_CHUNK_SIZE, 0);
+                char temp_buffer[HTTP_RECV_BUFFER_SIZE];
+                int bytes_received = recv(remote_server_socket, temp_buffer, HTTP_RECV_BUFFER_SIZE, 0);
 
                 if (bytes_received <= 0)
                     break;
@@ -367,7 +477,7 @@ void ProxyHandler::client_handler(const SOCKET client_socket, proxy_cache::Cache
                     int sent = send(client_socket, temp_buffer + bytes_sent, bytes_received - bytes_sent, 0);
                     if (sent == SOCKET_ERROR)
                     {
-                        std::cerr << "INFO|CLIENT " << client_id << "|REMOTE|send() failed: " << WSAGetLastError() << "\n";
+                        log("INFO|CLIENT|{}|REMOTE|send() failed: {}\n", client_id, WSAGetLastError());
                         return;
                     }
 
@@ -385,14 +495,14 @@ void ProxyHandler::client_handler(const SOCKET client_socket, proxy_cache::Cache
 
             if (total_bytes_received <= proxy_cache::MAX_CACHE_BYTES)
             {
-                cache_system.cache_add(url, server_response_data);
+                cache_system.cacheAdd(url, server_response_data);
             }
-            std::cout << "INFO|CLIENT " << client_id << "|REMOTE|Connection to " << request_part.host << " closed.\n";
+            log("INFO|CLIENT|{}|REMOTE|Connection to {} closed.\n", client_id, request_Part.host);
         }
     }
     else
     {
-        std::cout << "INFO|CLIENT " << client_id << "|Unsupported HTTP method.\n";
+        log("INFO|CLIENT|{}|Unsupported HTTP method.\n", client_id);
     }
     return;
 }

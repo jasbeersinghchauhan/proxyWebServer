@@ -34,8 +34,8 @@ namespace proxy_cache
 
         mutable std::mutex cache_mutex;
 
-        void detach_node_unlocked(std::shared_ptr<cache_node> &node);
-        void remove_lru_node_unlocked(const std::size_t &required_space);
+        void detachUnlockednode(std::shared_ptr<cache_node> &node);
+        void removeUnlockednode(const std::size_t &required_space);
 
     public:
         Cache();
@@ -44,8 +44,8 @@ namespace proxy_cache
         Cache(const Cache &) = delete;
         Cache &operator=(const Cache &) = delete;
 
-        void cache_add(const std::string &url, const std::vector<char> &data);
+        void cacheAdd(const std::string &url, const std::vector<char> &data);
 
-        std::vector<char> cache_find(const std::string &url);
+        std::vector<char> cacheFind(const std::string &url);
     };
 }
