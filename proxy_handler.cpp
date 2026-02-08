@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <algorithm>
 #include <vector>
 #include <string>
@@ -7,9 +6,6 @@
 #include <memory>
 #include <chrono>
 #include <semaphore>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windows.h>
 
 #include "proxy_handler.hpp"
 #include "proxy_cache.hpp"
@@ -26,7 +22,7 @@ ProxyHandler::ProxyHandler() {}
 
 ProxyHandler::~ProxyHandler() {}
 
-void ProxyHandler::sendHttpError(const SOCKET &client_socket, int status_code, const std::string &message)
+void ProxyHandler::sendHttpError(const socket_t &client_socket, int status_code, const std::string &message)
 {
     std::string body = "<html><body><h1>" + std::to_string(status_code) + " " + message + "</h1></body></html>";
     std::string response = "HTTP/1.1 " + std::to_string(status_code) + " " + message + "\r\n" +
@@ -41,7 +37,7 @@ void ProxyHandler::sendHttpError(const SOCKET &client_socket, int status_code, c
         int n = send(client_socket, response.c_str() + sent, response.length() - sent, 0);
         if (n == SOCKET_ERROR)
         {
-            std::cerr << "ERROR|Failed to send error response: " << WSAGetLastError() << "\n";
+            std::cerr << "ERROR|Failed to send error response: " << getSocketError() << "\n";
             return;
         }
         sent += n;
@@ -147,18 +143,16 @@ bool ProxyHandler::isMethod(const std::vector<char> &request_buffer, const std::
     return true;
 }
 
-SOCKET ProxyHandler::connectToRemoteHost(const std::string &host, const std::string &port)
+socket_t ProxyHandler::connectToRemoteHost(const std::string &host, const std::string &port)
 {
-    SOCKET remote_server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    socket_t remote_server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (remote_server_socket == INVALID_SOCKET)
     {
         log("ERROR|REMOTE|Failed to create socket for remote host {}:{}\n", host, port);
         return INVALID_SOCKET;
     }
 
-    DWORD timeout_duration = 30000; // 30 seconds
-    setsockopt(remote_server_socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout_duration, sizeof(timeout_duration));
-    setsockopt(remote_server_socket, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout_duration, sizeof(timeout_duration));
+    setSocketTimeout(remote_server_socket, 30);
 
     struct addrinfo hints = {}, *result = nullptr;
     hints.ai_family = AF_INET;
@@ -168,7 +162,7 @@ SOCKET ProxyHandler::connectToRemoteHost(const std::string &host, const std::str
     if (getaddrinfo(host.c_str(), port.c_str(), &hints, &result) != 0)
     {
         log("ERROR|REMOTE|Failed to resolve host: {}\n", host);
-        closesocket(remote_server_socket);
+        closeSocket(remote_server_socket);
         return INVALID_SOCKET;
     }
 
@@ -176,7 +170,7 @@ SOCKET ProxyHandler::connectToRemoteHost(const std::string &host, const std::str
     {
         log("ERROR|REMOTE|Failed to connect to remote host {}:{}\n", host, port);
         freeaddrinfo(result);
-        closesocket(remote_server_socket);
+        closeSocket(remote_server_socket);
         return INVALID_SOCKET;
     }
 
@@ -184,15 +178,12 @@ SOCKET ProxyHandler::connectToRemoteHost(const std::string &host, const std::str
     return remote_server_socket;
 }
 
-void ProxyHandler::handleClient(const SOCKET client_socket, proxy_cache::Cache &cache_system, std::counting_semaphore<INT_MAX> &connection_semaphore)
+void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache &cache_system, std::counting_semaphore<INT_MAX> &connection_semaphore)
 {
     SemaphoreGuard guard(connection_semaphore);
     SocketGuard socket_guard(client_socket);
 
-    const DWORD timeout_duration = 30000;
-
-    setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout_duration, sizeof(timeout_duration));
-    setsockopt(client_socket, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout_duration, sizeof(timeout_duration));
+    setSocketTimeout(client_socket, 30);
 
     const int client_id = (int)client_socket;
 
@@ -235,7 +226,7 @@ void ProxyHandler::handleClient(const SOCKET client_socket, proxy_cache::Cache &
 
         log("INFO|CLIENT|{}|CONNECT|Tunneling to {}\n", client_id, host);
 
-        SOCKET remote_server_socket = connectToRemoteHost(host, port);
+        socket_t remote_server_socket = connectToRemoteHost(host, port);
 
         SocketGuard remote_socket_guard(remote_server_socket);
 
@@ -271,12 +262,12 @@ void ProxyHandler::handleClient(const SOCKET client_socket, proxy_cache::Cache &
             FD_SET(client_socket, &read_fds);
             FD_SET(remote_server_socket, &read_fds);
 
-            SOCKET max_socket_descriptor = (client_socket > remote_server_socket) ? client_socket : remote_server_socket;
+            socket_t max_socket_descriptor = (client_socket > remote_server_socket) ? client_socket : remote_server_socket;
 
             int activity = select(max_socket_descriptor + 1, &read_fds, NULL, NULL, &select_timeout);
             if (activity == SOCKET_ERROR)
             {
-                log("ERROR|CLIENT|{}|CONNECT|select() failed {}\n", client_id, WSAGetLastError());
+                log("ERROR|CLIENT|{}|CONNECT|select() failed {}\n", client_id, getSocketError());
                 break;
             }
             else if (activity == 0)
@@ -385,7 +376,7 @@ void ProxyHandler::handleClient(const SOCKET client_socket, proxy_cache::Cache &
 
             log("INFO|CLIENT|{}|REMOTE|Connecting to {}:{}\n", client_id, request_Part.host, request_Part.port);
 
-            SOCKET remote_server_socket = connectToRemoteHost(request_Part.host, request_Part.port);
+            socket_t remote_server_socket = connectToRemoteHost(request_Part.host, request_Part.port);
             if (remote_server_socket == INVALID_SOCKET)
             {
                 log("ERROR|CLIENT|{}|REMOTE|Failed to connect to remote host.\n", client_id);
@@ -454,7 +445,7 @@ void ProxyHandler::handleClient(const SOCKET client_socket, proxy_cache::Cache &
 
             if (send(remote_server_socket, modified_request.data(), modified_request.size(), 0) == SOCKET_ERROR)
             {
-                log("INFO|CLIENT|{}|REMOTE|send() failed: {}\n", client_id, WSAGetLastError());
+                log("INFO|CLIENT|{}|REMOTE|send() failed: {}\n", client_id, getSocketError());
                 return;
             }
 
@@ -477,7 +468,7 @@ void ProxyHandler::handleClient(const SOCKET client_socket, proxy_cache::Cache &
                     int sent = send(client_socket, temp_buffer + bytes_sent, bytes_received - bytes_sent, 0);
                     if (sent == SOCKET_ERROR)
                     {
-                        log("INFO|CLIENT|{}|REMOTE|send() failed: {}\n", client_id, WSAGetLastError());
+                        log("INFO|CLIENT|{}|REMOTE|send() failed: {}\n", client_id, getSocketError());
                         return;
                     }
 

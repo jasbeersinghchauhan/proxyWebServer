@@ -2,12 +2,10 @@
 
 #include <memory>
 #include <semaphore>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windows.h>
 #include <vector>
 #include <string>
 
+#include "proxy_utils.hpp"
 #include "proxy_cache.hpp"
 
 class ProxyHandler
@@ -21,11 +19,11 @@ private:
     };
 
     struct SocketGuard {
-        SOCKET a_socket;
-        SocketGuard(SOCKET client_socket) : a_socket(a_socket) {}
+        socket_t a_socket;
+        SocketGuard(socket_t client_socket) : a_socket(a_socket) {}
         ~SocketGuard() {
             if (a_socket != INVALID_SOCKET)
-                closesocket(a_socket);
+                closeSocket(a_socket);
         }
     };
 
@@ -36,7 +34,7 @@ private:
         std::string port;
     } HttpRequestPart;
 
-    static void sendHttpError(const SOCKET& client_socket, int status_code, const std::string& message);
+    static void sendHttpError(const socket_t& client_socket, int status_code, const std::string& message);
 
     static bool isMethod(const std::vector<char> &request_buffer, const std::string &method);
 
@@ -44,10 +42,10 @@ private:
 
     static bool parseHttpUrl(const std::string &url, HttpRequestPart &requestPart);
 
-    static SOCKET connectToRemoteHost(const std::string& host, const std::string& port);
+    static socket_t connectToRemoteHost(const std::string& host, const std::string& port);
 public:
     ProxyHandler();
     ~ProxyHandler();
 
-    static void handleClient(const SOCKET client_socket, proxy_cache::Cache &cache_system, std::counting_semaphore<INT_MAX> &connection_semaphore);
+    static void handleClient(const socket_t client_socket, proxy_cache::Cache &cache_system, std::counting_semaphore<INT_MAX> &connection_semaphore);
 };
