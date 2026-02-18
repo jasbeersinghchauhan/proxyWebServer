@@ -224,7 +224,7 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
         else
             host = url.substr(0);
 
-        log("INFO|CLIENT|{}|CONNECT|Tunneling to {}\n", client_id, host);
+        log("INFO|CLIENT|{}|CONNECT|CONNECT target {}:{}\n", client_id, host, port);
 
         socket_t remote_server_socket = connectToRemoteHost(host, port);
 
@@ -236,27 +236,28 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
             return;
         }
 
-        log("INFO|CLIENT|{}|CONNECT|Tunnel established to {}:{}\n", client_id, host, port);
-
         std::string rebuilt = "HTTP/1.1 200 OK \r\n\r\n";
 
         int sent_rebuilt = 0;
         while (sent_rebuilt < rebuilt.size())
         {
-            int len = send(client_socket, rebuilt.data(), rebuilt.size() - sent_rebuilt, 0);
+            int len = send(client_socket, rebuilt.data() + sent_rebuilt, rebuilt.size() - sent_rebuilt, 0);
             sent_rebuilt += len;
         }
 
-        fd_set read_fds;
+        log("INFO|CLIENT|{}|CONNECT|Tunnel established to {}:{}\n", client_id, host, port);
 
-        struct timeval select_timeout;
-        select_timeout.tv_sec = 100;
-        select_timeout.tv_usec = 0;
+        fd_set read_fds;
 
         char tunnel_buffer[HTTPS_RECV_BUFFER_SIZE];
 
+        size_t tunnel_bytes = 0;
         while (true)
         {
+            struct timeval select_timeout;
+            select_timeout.tv_sec = 100;
+            select_timeout.tv_usec = 0;
+
             FD_ZERO(&read_fds);
 
             FD_SET(client_socket, &read_fds);
@@ -276,7 +277,6 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
                 break;
             }
 
-
             if (FD_ISSET(client_socket, &read_fds))
             {
                 int len = recv(client_socket, tunnel_buffer, HTTPS_RECV_BUFFER_SIZE, 0);
@@ -288,10 +288,12 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
                 while (total_sent < len)
                 {
                     int send_data = send(remote_server_socket, tunnel_buffer + total_sent, len - total_sent, 0);
-                    total_sent += send_data;
 
                     if (send_data == SOCKET_ERROR)
                         return;
+
+                    total_sent += send_data;
+                    tunnel_bytes += send_data;
                 }
             }
 
@@ -306,15 +308,21 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
                 while (total_sent < len)
                 {
                     int send_data = send(client_socket, tunnel_buffer + total_sent, len - total_sent, 0);
-                    total_sent += send_data;
 
                     if (send_data == SOCKET_ERROR)
                         return;
+
+                    total_sent += send_data;
+                    tunnel_bytes += send_data;
                 }
             }
         }
 
-        log("INFO|CLIENT|{}|CONNECT|Tunnel to {}:{} closed.\n", client_id, host, port);
+        log("INFO|CLIENT|{}|CONNECT|Tunnel to {}:{} closed. {} bytes relayed.\n",
+            client_id,
+            host,
+            port,
+            tunnel_bytes);
     }
     else if (isMethod(request_buffer, "GET ")) // HTTP GET Section
     {
@@ -354,6 +362,8 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
             log("WARN|CLIENT|{}|HTTP|Malformed HTTP request.\n", client_id);
             return;
         }
+
+        log("INFO|CLIENT|{}|HTTP|Request URL: {}\n", client_id, url);
 
         std::vector<char> cached_response = cache_system.cacheFind(url);
 
@@ -454,6 +464,7 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
             std::vector<char> server_response_data;
 
             int total_bytes_received = 0;
+            bool status_logged = false;
             while (true)
             {
                 char temp_buffer[HTTP_RECV_BUFFER_SIZE];
@@ -461,6 +472,19 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
 
                 if (bytes_received <= 0)
                     break;
+
+                if (!status_logged)
+                {
+                    std::string header(temp_buffer, bytes_received);
+
+                    size_t pos = header.find("\r\n");
+                    if (pos != std::string::npos)
+                    {
+                        std::string first_line = header.substr(0, pos);
+                        log("INFO|CLIENT|{}|REMOTE|Response: {}\n", client_id, first_line);
+                        status_logged = true;
+                    }
+                }
 
                 int bytes_sent = 0;
                 while (bytes_sent < bytes_received)
@@ -484,9 +508,17 @@ void ProxyHandler::handleClient(const socket_t client_socket, proxy_cache::Cache
                     server_response_data.insert(server_response_data.end(), temp_buffer, temp_buffer + bytes_received);
             }
 
+            log("INFO|CLIENT|{}|REMOTE|Forwarded {} bytes to client.\n",
+                client_id,
+                total_bytes_received);
+
             if (total_bytes_received <= proxy_cache::MAX_CACHE_BYTES)
             {
                 cache_system.cacheAdd(url, server_response_data);
+                log("INFO|CLIENT|{}|CACHE_STORE|{} ({} bytes)\n",
+                    client_id,
+                    url,
+                    server_response_data.size());
             }
             log("INFO|CLIENT|{}|REMOTE|Connection to {} closed.\n", client_id, request_Part.host);
         }
