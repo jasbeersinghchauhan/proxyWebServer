@@ -1,11 +1,20 @@
-# 🧩 Multi-Threaded Web Proxy Server (C++20 /Windows)
+# 🧩 Multi-Threaded Web Proxy Server (C++20 / Windows)
 
 A **high-performance, multi-threaded web proxy server** written in **Modern C++(C++20)** for the **Windows** platform.  
 This project focuses on systems programming, network socket management, and concurrency patterns. It implements a custom LRU cache, robust thread-safe logging, and supports both **HTTP (GET)** requests and **HTTPS (CONNECT)** tunneling.
+**Tech:** C++20 • Winsock2 • Multithreading • HTTP Proxy • LRU Cache • RAII
+
+## ⭐ What This Project Demonstrates
+
+- Low-level TCP socket programming using Winsock2
+- Concurrent client handling (std::thread)
+- HTTPS tunneling via CONNECT
+- HTTP response caching with custom LRU
+- Thread-safe logging infrastructure
 
 ### ⚠️ Note on Ownership
 
-- "The core proxy server, cache, and logging infrastructure are fully implemented by me."
+- The core proxy server, cache, and logging infrastructure are fully implemented by me.
 - The log analyzer dashboard (`log_analyzer.html`) and log format design (`proxy.log`) are included for demonstration only — I have not written the visualization code.
 
 ## 🚀 Key Features
@@ -43,6 +52,58 @@ This project focuses on systems programming, network socket management, and conc
 - Ensures atomic writes to `proxy.log` using mutex locking, preventing interleaved output from different threads.
 
 ---
+
+## 🖥️ Sample Execution
+
+The log below demonstrates HTTPS tunneling, HTTP forwarding,
+LRU caching behavior, and failure handling under real browser traffic.
+
+```text
+[INFO] Logger initialized
+[INFO] Server started on port 8000
+[INFO] LRU Cache initialized
+[INFO] Listening for connections...
+
+--- HTTPS CONNECT tunneling ---
+
+[CLIENT] CONNECT www.google.com:443
+[TUNNEL_ESTABLISHED]
+
+[CLIENT] CONNECT chatgpt.com:443
+[TUNNEL_ESTABLISHED]
+
+[CLIENT] CONNECT api.github.com:443
+[TUNNEL_ESTABLISHED]
+[TUNNEL_CLOSED] 26842 bytes relayed
+
+
+--- HTTP request with cache miss + store ---
+
+[CLIENT] GET http://www.example.com/
+[CACHE_MISS]
+
+[REMOTE] Connecting to www.example.com:80
+[REMOTE] HTTP/1.1 200 OK
+[REMOTE] Forwarded 715 bytes
+
+[CACHE_STORE] http://www.example.com/ (715 bytes)
+
+
+--- Subsequent request served from cache ---
+
+[CLIENT] GET http://www.example.com/
+[CACHE_HIT]
+
+[CLIENT] GET http://www.example.com/
+[CACHE_HIT]
+
+
+--- Example remote connection failure handling ---
+
+[CLIENT] GET http://neverssl.com/
+[CACHE_MISS]
+[REMOTE_ERROR] Failed to connect to remote host
+```
 
 ## ⚙️ Architecture Overview
 
@@ -154,6 +215,16 @@ Observe real-time logging in the console and proxy.log.
 
 3. View cache hit rate, misses, and live parsed logs.
 
+## 📈 Log Visualization Example
+
+You can use the included log_analyzer.html — a simple HTML/JS dashboard that reads proxy.log and displays metrics using Chart.js:
+
+```bash
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+```
+
+That script loads the Chart.js library used for the pie chart visualization.
+
 ### ⚠️ Limitations
 
 - 🪟 Windows-only (depends on WinSock and WinAPI)
@@ -180,7 +251,7 @@ Observe real-time logging in the console and proxy.log.
 
 - ⚙️ Config file support (config.ini)
 
-- 🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome!
 
@@ -207,17 +278,7 @@ Open a Pull Request
 
 💬 For major changes, please open an issue first to discuss what you’d like to modify.
 
-# 👤 Author
+## 👤 Author
 
 Jasbeer Singh Chauhan
 📧 jasbeersinghchauhan377@gmail.com
-
-# 📈 Log Visualization Example
-
-You can use the included log_analyzer.html — a simple HTML/JS dashboard that reads proxy.log and displays metrics using Chart.js:
-
-```bash
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-```
-
-That script loads the Chart.js library used for the pie chart visualization.
